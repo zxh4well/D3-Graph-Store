@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>双击时出现类似编辑框的input效果</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+
+        body,html,svg{
+            height: 100%;
+            width: 100%;
+        }
+
+    </style>
+</head>
+
+<body>
+<svg  xmlns="http://www.w3.org/2000/svg" version="1.1"  >
+    <circle id="dragDiv" cx="200" cy="50" r="40" stroke="black" stroke-width="2" fill="red" />
+    <rect x="300" y="200" width="150" height="150"
+          style="fill:green;stroke:pink;stroke-width:5;opacity:0.5"/>
+    <circle  cx="400" cy="50" r="40" stroke="black" stroke-width="2" fill="green" />
+    <foreignObject x="20" y="200" width="160" height="160"  style="background:blue;border:1px solid #000;opacity:0.5">
+        <input type="text" style="width: 100px;" />
+    </foreignObject>
+</svg>
+
+
+</body>
+</html>

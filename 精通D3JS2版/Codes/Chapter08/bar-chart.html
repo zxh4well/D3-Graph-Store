@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Bar Chart</title>
+    <style>
+        body {
+            font-family: "helvetica";
+        }
+
+        button {
+            margin: 0 7px 0 0;
+            background-color: #f5f5f5;
+            border: 1px solid #dedede;
+            border-top: 1px solid #eee;
+            border-left: 1px solid #eee;
+
+            font-size: 12px;
+            line-height: 130%;
+            text-decoration: none;
+            font-weight: bold;
+            color: #565656;
+            cursor: pointer;
+        }
+
+        .box {
+            width: 200px;
+            height: 200px;
+            margin: 40px;
+            float: left;
+            text-align: center;
+            border: #969696 solid thin;
+            padding: 5px;
+        }
+
+        .red {
+            background-color: #e9967a;
+            color: #f0f8ff;
+        }
+
+        .blue {
+            background-color: #add8e6;
+            color: #f0f8ff;
+        }
+
+        .cell {
+            min-width: 40px;
+            min-height: 20px;
+            margin: 5px;
+            float: left;
+            text-align: center;
+            border: #969696 solid thin;
+            padding: 5px;
+        }
+
+        .fixed-cell {
+            min-width: 40px;
+            min-height: 20px;
+            margin: 5px;
+            position: fixed;
+            text-align: center;
+            border: #969696 solid thin;
+            padding: 5px;
+        }
+
+        .h-bar {
+            min-height: 15px;
+            min-width: 10px;
+            background-color: steelblue;
+            margin-bottom: 2px;
+            font-size: 11px;
+            color: #f0f8ff;
+            text-align: right;
+            padding-right: 2px;
+        }
+
+        .v-bar {
+            min-height: 1px;
+            min-width: 30px;
+            background-color: #4682b4;
+            margin-right: 2px;
+            font-size: 10px;
+            color: #f0f8ff;
+            text-align: center;
+            width: 10px;
+            display: inline-block;
+        }
+
+        .baseline {
+            height: 1px;
+            background-color: black;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+        .selected {
+            background-color: #f08080;
+        }
+
+        .control-group {
+            padding-top: 10px;
+            margin: 10px;
+        }
+
+        .table {
+            width: 70%;
+        }
+
+        .table td, th {
+            padding: 5px;
+        }
+
+        .table-header {
+            background-color: #00AFEF;
+            font-weight: bold;
+        }
+
+        .table-row-odd {
+            background-color: #f0f8ff;
+        }
+
+        .table-row-odd {
+            background-color: #d3d3d3;
+        }
+
+        .code {
+            display: inline-block;
+            font-style: italic;
+            background-color: #d3d3d3;
+            border: #969696 solid thin;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .countdown{
+            width: 150px;
+            height: 150px;
+            font-size: 5em;
+            font-weight: bold;
+        }
+
+        .axis .grid-line{
+            stroke: black;
+            shape-rendering: crispEdges;
+            stroke-opacity: .2;
+        }
+
+        .line{
+            fill: none;
+            stroke: steelblue;
+            stroke-width: 2;
+        }
+
+        .dot {
+            fill: #fff;
+            stroke: steelblue;
+        }
+
+        .area {
+            stroke: none;
+            fill: steelblue;
+            fill-opacity: .2;
+        }
+
+        .pie text{
+            fill: white;
+            font-weight: bold;
+        }
+
+        ._0{
+            stroke: none;
+            fill: darkred;
+            fill-opacity: .7;
+        }
+
+        ._1 {
+            stroke: none;
+            fill: red;
+            fill-opacity: .7;
+        }
+
+        ._2 {
+            stroke: none;
+            fill: blue;
+            fill-opacity: .7;
+        }
+
+        ._3 {
+            stroke: none;
+            fill: green;
+            fill-opacity: .7;
+        }
+
+        ._4{
+            stroke: none;
+            fill: yellow;
+            fill-opacity: .7;
+        }
+
+        ._5{
+            stroke: none;
+            fill: blueviolet;
+            fill-opacity: .7;
+        }
+
+        .bubble{
+            fill-opacity: .3;
+        }
+
+        .bar{
+            stroke: none;
+            fill: steelblue;
+        }
+
+    </style>
+    <script type="text/javascript" src="../../lib/d3.js"></script>
+</head>
+
+<body>
+
+<script type="text/javascript">
+function barChart() {
+    var _chart = {};
+
+    var _width = 600, _height = 250,
+            _margins = {top: 30, left: 30, right: 30, bottom: 30},
+            _x, _y,
+            _data = [],
+            _colors = d3.scaleOrdinal(d3.schemeCategory10),
+            _svg,
+            _bodyG;
+
+    _chart.render = function () {
+        if (!_svg) {
+            _svg = d3.select("body").append("svg")
+                    .attr("height", _height)
+                    .attr("width", _width);
+
+            renderAxes(_svg);
+
+            defineBodyClip(_svg);
+        }
+
+        renderBody(_svg);
+    };
+
+    function renderAxes(svg) {
+        var axesG = svg.append("g")
+                .attr("class", "axes");
+
+        var xAxis = d3.axisBottom()
+                .scale(_x.range([0, quadrantWidth()]));
+
+        var yAxis = d3.axisLeft()
+                .scale(_y.range([quadrantHeight(), 0]));
+
+        axesG.append("g")
+                .attr("class", "axis")
+                .attr("transform", function () {
+                    return "translate(" + xStart() + "," + yStart() + ")";
+                })
+                .call(xAxis);
+
+        axesG.append("g")
+                .attr("class", "axis")
+                .attr("transform", function () {
+                    return "translate(" + xStart() + "," + yEnd() + ")";
+                })
+                .call(yAxis);
+    }
+
+    function defineBodyClip(svg) {
+        var padding = 5;
+
+        svg.append("defs")
+                .append("clipPath")
+                .attr("id", "body-clip")
+                .append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", quadrantWidth() + 2 * padding)
+                .attr("height", quadrantHeight());
+    }
+
+    function renderBody(svg) {
+        if (!_bodyG)
+            _bodyG = svg.append("g")
+                    .attr("class", "body")
+                    .attr("transform", "translate(" 
+                            + xStart() 
+                            + "," 
+                            + yEnd() + ")")
+                    .attr("clip-path", "url(#body-clip)");
+
+        renderBars();
+    }
+    
+    function renderBars() {
+        var padding = 2; // <-A
+
+        var bars = _bodyG.selectAll("rect.bar")
+                .data(_data);
+        bars.enter()
+                .append("rect") // <-B
+            .merge(bars)
+                .attr("class", "bar")
+            .transition()
+                .attr("x", function (d) { 
+                    return _x(d.x); // <-C
+                })
+                .attr("y", function (d) { 
+                    return _y(d.y); // <-D 
+                })
+                .attr("height", function (d) { 
+                    return yStart() - _y(d.y); 
+                })
+                .attr("width", function(d){
+                    return Math.floor(quadrantWidth() / _data.length) - padding;
+                });
+    }
+
+    function xStart() {
+        return _margins.left;
+    }
+
+    function yStart() {
+        return _height - _margins.bottom;
+    }
+
+    function xEnd() {
+        return _width - _margins.right;
+    }
+
+    function yEnd() {
+        return _margins.top;
+    }
+
+    function quadrantWidth() {
+        return _width - _margins.left - _margins.right;
+    }
+
+    function quadrantHeight() {
+        return _height - _margins.top - _margins.bottom;
+    }
+
+    _chart.width = function (w) {
+        if (!arguments.length) return _width;
+        _width = w;
+        return _chart;
+    };
+
+    _chart.height = function (h) {
+        if (!arguments.length) return _height;
+        _height = h;
+        return _chart;
+    };
+
+    _chart.margins = function (m) {
+        if (!arguments.length) return _margins;
+        _margins = m;
+        return _chart;
+    };
+
+    _chart.colors = function (c) {
+        if (!arguments.length) return _colors;
+        _colors = c;
+        return _chart;
+    };
+
+    _chart.x = function (x) {
+        if (!arguments.length) return _x;
+        _x = x;
+        return _chart;
+    };
+
+    _chart.y = function (y) {
+        if (!arguments.length) return _y;
+        _y = y;
+        return _chart;
+    };
+
+    _chart.setSeries = function (series) {
+        _data = series;
+        return _chart;
+    };
+
+    return _chart;
+}
+
+function randomData() {
+    return Math.random() * 9;
+}
+
+function update() {
+    data.length = 0;
+    for (var j = 0; j < numberOfDataPoint; ++j)
+        data.push({x: j, y: randomData()});    
+
+    chart.render();
+}
+
+var numberOfDataPoint = 31,
+    data = [];
+
+data = d3.range(numberOfDataPoint).map(function (i) {
+    return {x: i, y: randomData()};
+});
+
+var chart = barChart()
+        .x(d3.scaleLinear().domain([-1, 32]))
+        .y(d3.scaleLinear().domain([0, 10]));
+
+
+chart.setSeries(data);
+
+chart.render();
+</script>
+
+<div class="control-group">
+    <button onclick="update()">Update</button>
+</div>
+
+</body>
+
+</html>
